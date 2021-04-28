@@ -292,6 +292,11 @@ Kirigami.Page {
                         visible: text !== ""
                         width: parent.width
                     }
+                    LyricsModel {
+                        id: lyricsModel
+                        position: ElisaApplication.audioControl.playerPosition
+                        lyric: metaDataModel.lyrics
+                    }
 
                     Kirigami.PlaceholderMessage {
                         id: lyricPlaceholder
