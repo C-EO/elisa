@@ -122,7 +122,7 @@ Kirigami.Page {
                 id: showLyricButton
                 ButtonGroup.group: nowPlayingButtons
 
-                readonly property alias item: lyricScroll
+                //readonly property alias item: lyricScroll
 
                 checkable: true
                 checked: persistentSettings.nowPlayingPreferLyric
@@ -258,53 +258,48 @@ Kirigami.Page {
                 }
             }
 
-            // Lyric
-            ScrollView {
-                id: lyricScroll
-
+            // Lyrics
+            Item {
+                id: lyricItem
+                property real margins: Kirigami.Units.largeSpacing
                 implicitWidth: {
                     if (contentLayout.wideMode) {
-                        return contentLayout.width * 0.5
+                        return contentLayout.width * 0.5 - margins
                     } else {
-                        return showLyricButton.checked? contentLayout.width : 0
+                        return showLyricButton.checked ? contentLayout.width - margins : 0
                     }
                 }
+                implicitHeight: lyricsView.count == 0 ? lyricPlaceholder.height : lyricsView.height
+                x: Kirigami.Units.largeSpacing
 
-                implicitHeight: Math.min(lyricItem.height, parent.height)
-
-                contentWidth: implicitWidth
-                contentHeight: lyricItem.height
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-
-                // Lyrics
-                Item {
-                    id: lyricItem
-                    property real margins: Kirigami.Units.largeSpacing + lyricScroll.ScrollBar.vertical.width
-                    width: lyricScroll.width - margins
-                    height: lyricLabel.visible? lyricLabel.height : lyricPlaceholder.height
-                    x: Kirigami.Units.largeSpacing
-
-                    Label {
-                        id: lyricLabel
-                        text: metaDataModel.lyrics
-                        wrapMode: Text.WordWrap
+                ListView {
+                    id: lyricsView
+                    height: contentHeight
+                    width: parent.width
+                    model: lyricsModel
+                    delegate: Label {
+                        text: display
+                        font.bold: ListView.isCurrentItem
                         horizontalAlignment: contentLayout.wideMode? Text.AlignLeft : Text.AlignHCenter
-                        visible: text !== ""
-                        width: parent.width
                     }
-                    LyricsModel {
-                        id: lyricsModel
-                        position: ElisaApplication.audioControl.playerPosition
-                        lyric: metaDataModel.lyrics
-                    }
+                    preferredHighlightBegin: 0
+                    preferredHighlightEnd: 150
+                    highlightRangeMode: ListView.StrictlyEnforceRange
+                    currentIndex: lyricsModel.highlightedIndex
+                }
 
-                    Kirigami.PlaceholderMessage {
-                        id: lyricPlaceholder
-                        visible: !lyricLabel.visible
-                        text: i18n("No lyrics found")
-                        icon.name: "view-media-lyrics"
-                        width: parent.width
-                    }
+                LyricsModel {
+                    id: lyricsModel
+                    position: ElisaApplication.audioPlayer.position
+                    lyric: metaDataModel.lyrics
+                }
+
+                Kirigami.PlaceholderMessage {
+                    id: lyricPlaceholder
+                    visible: lyricsView.count == 0
+                    text: i18n("No lyrics found")
+                    icon.name: "view-media-lyrics"
+                    width: parent.width
                 }
             }
         }
