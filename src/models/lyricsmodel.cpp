@@ -166,7 +166,13 @@ void LyricsModel::setLyric(const QString &lyric)
     Q_EMIT layoutAboutToBeChanged();
     d->lastPosition = -1;
     d->highlightedIndex = 0;
-    d->parse(lyric);
+    auto ret = d->parse(lyric);
+
+    // has non-LRC formatted lyric
+    if (!ret && !lyric.isEmpty()) {
+        d->timeToStringIndex = {{std::numeric_limits<qint64>::max(), 0}};
+        d->lyrics = {lyric};
+    }
     Q_EMIT layoutChanged();
     Q_EMIT lyricChanged();
 }
