@@ -122,8 +122,6 @@ Kirigami.Page {
                 id: showLyricButton
                 ButtonGroup.group: nowPlayingButtons
 
-                //readonly property alias item: lyricScroll
-
                 checkable: true
                 checked: persistentSettings.nowPlayingPreferLyric
                 display: topItem.isWidescreen ? AbstractButton.TextBesideIcon : AbstractButton.IconOnly
@@ -264,9 +262,9 @@ Kirigami.Page {
                 property real margins: Kirigami.Units.largeSpacing
                 implicitWidth: {
                     if (contentLayout.wideMode) {
-                        return contentLayout.width * 0.5 - margins
+                        return contentLayout.width * 0.5
                     } else {
-                        return showLyricButton.checked ? contentLayout.width - margins : 0
+                        return showLyricButton.checked ? contentLayout.width : 0
                     }
                 }
                 implicitHeight: Math.min(lyricItem.height, parent.height)

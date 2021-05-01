@@ -10,7 +10,7 @@ class LyricsModel::LyricsModelPrivate
 {
 public:
     bool parse(const QString &lyric);
-    int highlightedIndex{0};
+    int highlightedIndex{-1};
     int timeIndex{0};
     qint64 lastPosition{1};
     std::vector<std::pair<qint64, int>>
@@ -165,12 +165,12 @@ void LyricsModel::setLyric(const QString &lyric)
 {
     Q_EMIT layoutAboutToBeChanged();
     d->lastPosition = -1;
-    d->highlightedIndex = 0;
+    d->timeIndex = 0;
     auto ret = d->parse(lyric);
 
     // has non-LRC formatted lyric
     if (!ret && !lyric.isEmpty()) {
-        d->timeToStringIndex = {{std::numeric_limits<qint64>::max(), 0}};
+        d->timeToStringIndex = {{-1, 0}};
         d->lyrics = {lyric};
     }
     Q_EMIT layoutChanged();
@@ -180,6 +180,15 @@ void LyricsModel::setPosition(qint64 position)
 {
     if (d->timeToStringIndex.empty())
         return;
+
+    // non-LRC formatted lyric, no highlight
+    if (d->timeToStringIndex.front().first < 0) {
+        if (d->highlightedIndex != -1) {
+            d->highlightedIndex = -1;
+            Q_EMIT highlightedIndexChanged();
+        }
+        return;
+    }
 
     qDebug() << position;
     // if progressed less than 1s, do a linear search from last index
