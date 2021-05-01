@@ -259,7 +259,6 @@ Kirigami.Page {
             // Lyrics
             ScrollView {
                 id: lyricScroll
-                property real margins: Kirigami.Units.largeSpacing
                 implicitWidth: {
                     if (contentLayout.wideMode) {
                         return contentLayout.width * 0.5
