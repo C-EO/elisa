@@ -192,7 +192,6 @@ void LyricsModel::setPosition(qint64 position)
         return;
     }
 
-    qDebug() << position;
     // if progressed less than 1s, do a linear search from last index
     if (d->lastPosition >= 0 && position >= d->lastPosition &&
         position - d->lastPosition < 1000) {
