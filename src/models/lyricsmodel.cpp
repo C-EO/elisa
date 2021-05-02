@@ -172,8 +172,10 @@ void LyricsModel::setLyric(const QString &lyric)
     if (!ret && !lyric.isEmpty()) {
         d->timeToStringIndex = {{-1, 0}};
         d->lyrics = {lyric};
+        d->highlightedIndex = -1;
     }
     Q_EMIT layoutChanged();
+    Q_EMIT highlightedIndexChanged();
     Q_EMIT lyricChanged();
 }
 void LyricsModel::setPosition(qint64 position)
