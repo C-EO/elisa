@@ -292,7 +292,7 @@ Kirigami.Page {
                         }
                         preferredHighlightBegin: 0
                         preferredHighlightEnd: 150
-                        highlightRangeMode: ListView.ApplyRange
+                        highlightRangeMode: ListView.StrictlyEnforceRange
                         currentIndex: lyricsModel.highlightedIndex
                     }
 
