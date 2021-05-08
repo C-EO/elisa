@@ -6,6 +6,8 @@
 #include "lyricsmodel.h"
 #include <QDebug>
 #include <algorithm>
+#include <unordered_map>
+#include <KLocalizedString>
 class LyricsModel::LyricsModelPrivate
 {
 public:
@@ -22,6 +24,7 @@ private:
                              QString::const_iterator end);
     QString parseOneLine(QString::const_iterator &begin,
                          QString::const_iterator end);
+    QString parseTags(QString::const_iterator &begin, QString::const_iterator end);
 };
 qint64 LyricsModel::LyricsModelPrivate::parseOneTimeStamp(
     QString::const_iterator &begin,
@@ -88,7 +91,7 @@ LyricsModel::LyricsModelPrivate::parseOneLine(QString::const_iterator &begin,
     auto size{0};
     auto it = begin;
     while (begin != end) {
-        if (begin->toLatin1() != QLatin1Char('[')) {
+        if (begin->toLatin1() != '[') {
             size++;
         } else
             break;
@@ -100,6 +103,46 @@ LyricsModel::LyricsModelPrivate::parseOneLine(QString::const_iterator &begin,
     } else
         return {};
 }
+QString LyricsModel::LyricsModelPrivate::parseTags(QString::const_iterator &begin, QString::const_iterator end)
+{
+    static auto skipTillChar = [](QString::const_iterator begin, QString::const_iterator end, char endChar) {
+        while (begin != end && begin->toLatin1() != endChar) {
+            begin++;
+        }
+        return begin;
+    };
+    static std::unordered_map<QString, QString> map = {{QStringLiteral("ar"), i18n("Artist: ")},
+                                                       {QStringLiteral("al"), i18n("Album: ")},
+                                                       {QStringLiteral("ti"), i18n("Title: ")},
+                                                       {QStringLiteral("au"), i18n("Creator: ")},
+                                                       {QStringLiteral("length"), i18n("Length: ")},
+                                                       {QStringLiteral("by"), i18n("Created by: ")},
+                                                       {QStringLiteral("re"), i18n("Editor: ")},
+                                                       {QStringLiteral("ve"), i18n("Version: ")}};
+    QString tags;
+
+    while (begin != end) {
+        // skip till tags
+        begin = skipTillChar(begin, end, '[');
+        if (begin != end)
+            begin++;
+        else
+            break;
+
+        auto tagIdEnd = skipTillChar(begin, end, ':');
+        auto tagId = QString(begin, std::distance(begin, tagIdEnd));
+        if(tagIdEnd != end && map.count(tagId)) {
+            tagIdEnd++;
+            auto tagContentEnd = skipTillChar(tagIdEnd, end, ']');
+            tags += map[tagId] + QString(tagIdEnd, std::distance(tagIdEnd, tagContentEnd))
+                    + QStringLiteral("\n");
+            begin = tagContentEnd;
+        } else {
+            return tags;
+        }
+    }
+    return tags;
+}
 bool LyricsModel::LyricsModelPrivate::parse(const QString &lyric)
 {
     timeToStringIndex.clear();
@@ -108,18 +151,18 @@ bool LyricsModel::LyricsModelPrivate::parse(const QString &lyric)
     if (lyric.isEmpty())
         return false;
 
-    QString::const_iterator begin = lyric.begin();
-
+    QString::const_iterator begin = lyric.begin(), end = lyric.end();
+    auto tag = parseTags(begin, end);
     int index = 0;
     std::vector<qint64> timeStamps;
 
     while (begin != lyric.end()) {
-        auto timeStamp = parseOneTimeStamp(begin, lyric.end());
+        auto timeStamp = parseOneTimeStamp(begin, end);
         while (timeStamp >= 0) {
             timeStamps.push_back(timeStamp);
-            timeStamp = parseOneTimeStamp(begin, lyric.end());
+            timeStamp = parseOneTimeStamp(begin, end);
         }
-        auto string = parseOneLine(begin, lyric.end());
+        auto string = parseOneLine(begin, end);
         if (!string.isEmpty() && !timeStamps.empty()) {
             for (auto time : timeStamps) {
                 timeToStringIndex.push_back({time, index});
@@ -137,6 +180,10 @@ bool LyricsModel::LyricsModelPrivate::parse(const QString &lyric)
                   return lhs.first < rhs.first;
               });
 
+    // insert tags to first lyric front
+    if (!timeToStringIndex.empty() && !tag.isEmpty()) {
+        lyrics.at(timeToStringIndex.begin()->second).push_front(tag);
+    }
     return !timeToStringIndex.empty();
 }
 LyricsModel::LyricsModel(QObject *parent)
