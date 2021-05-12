@@ -270,6 +270,9 @@ Kirigami.Page {
                 contentWidth: implicitWidth
                 contentHeight: lyricItem.height
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                Behavior on ScrollBar.vertical.position {
+                     NumberAnimation {}
+                 }
 
                 Item {
                     id: lyricItem
@@ -290,10 +293,23 @@ Kirigami.Page {
                             font.bold: ListView.isCurrentItem
                             horizontalAlignment: contentLayout.wideMode? Text.AlignLeft : Text.AlignHCenter
                         }
-                        preferredHighlightBegin: 0
-                        preferredHighlightEnd: 150
-                        highlightRangeMode: ListView.StrictlyEnforceRange
                         currentIndex: lyricsModel.highlightedIndex
+                        onCurrentIndexChanged: {
+                            if (currentIndex === -1)
+                                return
+
+                            var toPos = (currentItem.y + currentItem.height * 0.5 - lyricScroll.height * 0.5) / contentHeight
+                            // first page
+                            toPos = Math.max(toPos, 0)
+                            // last page
+                            toPos = Math.min(toPos, (contentHeight - lyricScroll.height)/contentHeight)
+                            // avoid text glitches
+                            toPos = Math.floor(toPos * 1000) / 1000
+                            lyricScroll.ScrollBar.vertical.position = toPos
+                        }
+
+
+
                     }
 
                     LyricsModel {
