@@ -43,7 +43,7 @@ Kirigami.Page {
 
     TrackContextMetaDataModel {
         id: metaDataModel
-
+        onLyricsChanged: lyricsModel.setLyric(lyrics)
         manager: ElisaApplication.musicManager
     }
 
@@ -314,8 +314,12 @@ Kirigami.Page {
 
                     LyricsModel {
                         id: lyricsModel
-                        position: ElisaApplication.audioPlayer.position
-                        lyric: metaDataModel.lyrics
+                    }
+                    Connections {
+                        target: ElisaApplication.audioPlayer
+                        function onPositionChanged(position) {
+                            lyricsModel.setPosition(position)
+                        }
                     }
 
                     Kirigami.PlaceholderMessage {
