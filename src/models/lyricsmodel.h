@@ -12,21 +12,22 @@
 class ELISALIB_EXPORT LyricsModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(int highlightedIndex READ highlightedIndex NOTIFY
-                   highlightedIndexChanged)
+    Q_PROPERTY(int highlightedIndex
+               READ highlightedIndex
+               NOTIFY highlightedIndexChanged)
 public:
     LyricsModel(QObject *parent = nullptr);
     ~LyricsModel() override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index,
-                  int role = Qt::DisplayRole) const override;
-    Q_INVOKABLE void setLyric(const QString &lyric);
-    Q_INVOKABLE void setPosition(qint64 position);
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     int highlightedIndex() const;
+
 Q_SIGNALS:
     void lyricChanged();
     void highlightedIndexChanged();
     void positionChanged();
+    Q_INVOKABLE void setLyric(const QString &lyric);
+    Q_INVOKABLE void setPosition(qint64 position);
 
 private:
     class LyricsModelPrivate;

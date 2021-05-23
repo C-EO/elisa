@@ -15,15 +15,14 @@ public:
     int highlightedIndex{-1};
     int timeIndex{0};
     qint64 lastPosition{1};
-    std::vector<std::pair<qint64, int>>
-        timeToStringIndex; // timestamp, string index pair
+
+    // pairs of lyric timestamp and corresponding content index in lyrics vector
+    std::vector<std::pair<qint64, int>> timeToStringIndex;
     std::vector<QString> lyrics;
 
 private:
-    qint64 parseOneTimeStamp(QString::const_iterator &begin,
-                             QString::const_iterator end);
-    QString parseOneLine(QString::const_iterator &begin,
-                         QString::const_iterator end);
+    qint64 parseOneTimeStamp(QString::const_iterator &begin, QString::const_iterator end);
+    QString parseOneLine(QString::const_iterator &begin, QString::const_iterator end);
     QString parseTags(QString::const_iterator &begin, QString::const_iterator end);
 };
 qint64 LyricsModel::LyricsModelPrivate::parseOneTimeStamp(
