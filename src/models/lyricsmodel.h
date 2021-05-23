@@ -22,12 +22,14 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     int highlightedIndex() const;
 
+public Q_SLOTS:
+    Q_INVOKABLE void setLyric(const QString &lyric);
+    Q_INVOKABLE void setPosition(qint64 position);
+
 Q_SIGNALS:
     void lyricChanged();
     void highlightedIndexChanged();
     void positionChanged();
-    Q_INVOKABLE void setLyric(const QString &lyric);
-    Q_INVOKABLE void setPosition(qint64 position);
 
 private:
     class LyricsModelPrivate;

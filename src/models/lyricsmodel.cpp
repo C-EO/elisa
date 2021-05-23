@@ -25,55 +25,89 @@ private:
     QString parseOneLine(QString::const_iterator &begin, QString::const_iterator end);
     QString parseTags(QString::const_iterator &begin, QString::const_iterator end);
 };
+/*###########parseOneTimeStamp###########
+ * Function to parse timestamp of one LRC line
+ * if successful, return timestamp in milliseconds
+ * otherwise return -1
+ * */
 qint64 LyricsModel::LyricsModelPrivate::parseOneTimeStamp(
     QString::const_iterator &begin,
     QString::const_iterator end)
 {
-    /* states
-     *  [00:01.02]bla bla
-     * 012 34 56
+    /* Example of LRC format and corresponding states
      *
+     * States:
+     *
+     *  [00:01.02]bla bla
+     * ^^^ ^^ ^^ ^^
+     * ||| || || ||
+     * ||| || || |End
+     * ||| || || RightBracket
+     * ||| || |Hundredths
+     * ||| || Period
+     * ||| |Seconds
+     * ||| Colon
+     * ||Minutes
+     * |LeftBracket
+     * Start
      * */
-    auto states{0};
-    int minute = 0, second = 0, hundred = 0;
+    enum States {Start, LeftBracket, Minutes, Colon, Seconds, Period, Hundredths, RightBracket, End};
+    auto states {States::Start};
+    auto minute {0}, second {0}, hundred {0};
+
     while (begin != end) {
         switch (begin->toLatin1()) {
         case '.':
-            if (states == 4)
-                states = 5;
+            if (states == Seconds)
+                states = Period;
             break;
         case '[':
-            if (states == 0)
-                states = 1;
+            if (states == Start)
+                states = LeftBracket;
             break;
         case ']':
             begin++;
-            if (states == 6)
+            if (states == Hundredths) {
                 return minute * 60 * 1000 + second * 1000 +
                     hundred * 10; // we return milliseconds
-            else
+            }
+            else {
                 return -1;
+            }
         case ':':
-            if (states == 2)
-                states = 3;
+            if (states == Minutes)
+                states = Colon;
             break;
         default:
-            if (isdigit(begin->toLatin1())) {
-                if (states == 1 || states == 3 || states == 5)
-                    states++;
-
-                auto ret = begin->toLatin1() - '0';
-                if (states == 2) {
-                    minute *= 10;
-                    minute += ret;
-                } else if (states == 4) {
-                    second *= 10;
-                    second += ret;
-                } else if (states == 6) {
-                    hundred *= 10;
-                    hundred += ret;
+            if (begin->isDigit()) {
+                switch (states) {
+                    case LeftBracket:
+                        states = Minutes;
+                    case Minutes:
+                        minute *= 10;
+                        minute += begin->toLatin1() - '0';
+                        break;
+                    case Colon:
+                        states = Seconds;
+                    case Seconds:
+                        second *= 10;
+                        second += begin->toLatin1() - '0';
+                        break;
+                    case Period:
+                        states = Hundredths;
+                    case Hundredths:
+                        // we only parse to hundredth second
+                        if (hundred >= 100) {
+                            break;
+                        }
+                        hundred *= 10;
+                        hundred += begin->toLatin1() - '0';
+                        break;
+                    default:
+                        // lyric format is corrupt
+                        break;
                 }
-            } else if (states == 0) {
+            } else {
                 begin++;
                 return -1;
             }
@@ -81,6 +115,8 @@ qint64 LyricsModel::LyricsModelPrivate::parseOneTimeStamp(
         }
         begin++;
     }
+
+    // end of lyric and no correct value found
     return -1;
 }
 QString
