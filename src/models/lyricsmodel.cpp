@@ -245,7 +245,7 @@ QVariant LyricsModel::data(const QModelIndex &index, int role) const
 }
 void LyricsModel::setLyric(const QString &lyric)
 {
-    Q_EMIT layoutAboutToBeChanged();
+    beginResetModel();
     d->lastPosition = -1;
     d->timeIndex = 0;
     auto ret = d->parse(lyric);
@@ -256,7 +256,7 @@ void LyricsModel::setLyric(const QString &lyric)
         d->lyrics = {lyric};
         d->highlightedIndex = -1;
     }
-    Q_EMIT layoutChanged();
+    endResetModel();
     Q_EMIT highlightedIndexChanged();
     Q_EMIT lyricChanged();
 }
