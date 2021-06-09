@@ -270,9 +270,14 @@ Kirigami.Page {
                 contentWidth: implicitWidth
                 contentHeight: lyricItem.height
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                Behavior on ScrollBar.vertical.position {
-                     NumberAnimation {}
-                 }
+                PropertyAnimation {
+                    id: lyricScrollAnimation
+
+                    // the target is a flickable
+                    target: lyricScroll.contentItem
+                    property: "contentY"
+                    onToChanged: restart()
+                }
 
                 Item {
                     id: lyricItem
@@ -298,18 +303,16 @@ Kirigami.Page {
                             if (currentIndex === -1)
                                 return
 
-                            var toPos = (currentItem.y + currentItem.height * 0.5 - lyricScroll.height * 0.5) / contentHeight
-                            // first page
+                            // center aligned
+                            var toPos = Math.round(currentItem.y + currentItem.height * 0.5 - lyricScroll.height * 0.5)
+                            // make sure the first and the last lines are always
+                            // positioned at the beginning and the end of the view
+
                             toPos = Math.max(toPos, 0)
-                            // last page
-                            toPos = Math.min(toPos, (contentHeight - lyricScroll.height)/contentHeight)
-                            // avoid text glitches
-                            toPos = Math.floor(toPos * 1000) / 1000
-                            lyricScroll.ScrollBar.vertical.position = toPos
+                            toPos = Math.min(toPos, contentHeight - lyricScroll.height)
+                            lyricScrollAnimation.to = toPos
+
                         }
-
-
-
                     }
 
                     LyricsModel {
