@@ -403,7 +403,9 @@ ColumnLayout {
 
             // Show the border
             Component.onCompleted: {
-                scrollview.background.visible = true;
+                if (scrollview.background) {
+                    scrollview.background.visible = true;
+                }
             }
 
             contentItem: ListView {
@@ -424,6 +426,7 @@ ColumnLayout {
                                               - delegate.rightPadding
                                               - (action.visible ? action.width : 0)
                         elide: Text.ElideMiddle
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     actions: Kirigami.Action {
